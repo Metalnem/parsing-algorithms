@@ -10,7 +10,7 @@ import (
 type Type int
 
 const (
-	// EOF is default value for the closed channel.
+	// EOF indicates there are no tokens left.
 	EOF Type = iota
 
 	// LeftParen is '('.
@@ -22,8 +22,8 @@ const (
 	// Operator is '+', '-', '*', '/' or '^'.
 	Operator
 
-	// Operand is integer or floating-point number.
-	Operand
+	// Number is integer or floating-point number.
+	Number
 
 	// Error represents any unknown character.
 	Error
@@ -49,8 +49,8 @@ type Scanner struct {
 
 type stateFn func(*Scanner) stateFn
 
-// New initializes a new scanner for the input string.
-func New(input string) *Scanner {
+// NewScanner initializes a new scanner for the input string.
+func NewScanner(input string) *Scanner {
 	return &Scanner{
 		tokens: make(chan Token, 1),
 		input:  input,
@@ -155,6 +155,6 @@ func lexNumber(s *Scanner) stateFn {
 		}
 	}
 
-	s.emit(Operand)
+	s.emit(Number)
 	return lexAny
 }

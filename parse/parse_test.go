@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParseSuccess(t *testing.T) {
+func TestParse(t *testing.T) {
 	tests := []struct {
 		input string
 		value float64
@@ -43,38 +43,6 @@ func TestParseSuccess(t *testing.T) {
 
 			if math.Abs(expected-actual) > tolerance {
 				t.Errorf("Expected %f, got %f", expected, actual)
-			}
-		})
-	}
-}
-
-func TestParseFail(t *testing.T) {
-	tests := []struct {
-		input string
-		err   string
-	}{
-		{"1 + 2 abc", "Expected operator, got abc"},
-	}
-
-	p := NewParser()
-
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.input, func(t *testing.T) {
-			t.Parallel()
-
-			_, err := p.Parse(test.input)
-
-			if err == nil {
-				t.Fatal("Expected error")
-			}
-
-			expected := test.err
-			actual := err.Error()
-
-			if expected != actual {
-				t.Errorf("Expected %s, got %s", expected, actual)
 			}
 		})
 	}

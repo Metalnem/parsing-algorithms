@@ -129,6 +129,18 @@ func (s *state) parsePrimary() (ast.Expr, error) {
 		return expr, nil
 	}
 
+	if op, ok := unOps[s.t.Value]; ok {
+		val := s.t.Value
+		s.t = s.s.Next()
+		expr, err := s.parseExpr(op.prec)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.UnaryExpr{Op: val, X: expr}, nil
+	}
+
 	val, err := strconv.ParseFloat(s.t.Value, 64)
 
 	if err != nil {

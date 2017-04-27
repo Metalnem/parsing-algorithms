@@ -64,7 +64,7 @@ func (parser) Parse(input string) (ast.Expr, error) {
 	}
 
 	if state.t.Type != scan.EOF {
-		return nil, errors.Errorf("Expected EOF, got %s", state.t.Value)
+		return nil, errors.Errorf("Expected operator, got %s", state.t.Value)
 	}
 
 	return expr, err

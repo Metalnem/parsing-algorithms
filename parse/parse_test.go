@@ -19,7 +19,7 @@ func TestParse(t *testing.T) {
 		{"4 + 2", 6},
 		{"9 - 8 - 7", -6},
 		{"9 - (8 - 7)", 8},
-		{"9 - 8) - 7", -6},
+		{"(9 - 8) - 7", -6},
 		{"2 + 3 ^ 2 * 3 + 4", 33},
 	}
 
@@ -27,6 +27,8 @@ func TestParse(t *testing.T) {
 	tolerance := 0.00000000001
 
 	for _, test := range tests {
+		test := test
+
 		t.Run(test.input, func(t *testing.T) {
 			t.Parallel()
 

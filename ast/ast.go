@@ -29,6 +29,8 @@ type Number struct {
 // Eval calculates the value of a unary expression.
 func (expr *UnaryExpr) Eval() float64 {
 	switch expr.Op {
+	case "+":
+		return expr.X.Eval()
 	case "-":
 		return -expr.X.Eval()
 	default:

@@ -57,6 +57,7 @@ func TestParseFail(t *testing.T) {
 		{"3 * 7 ,", "Expected operator, got ,"},
 		{"((27 - 11) + 3", "Expected right paren, got EOF"},
 		{"2 + x", "Expected number, got x"},
+		{"", "Expected number, got EOF"},
 	}
 
 	p := NewParser()

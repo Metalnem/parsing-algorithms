@@ -47,3 +47,38 @@ func TestParse(t *testing.T) {
 		})
 	}
 }
+
+func TestParseFail(t *testing.T) {
+	tests := []struct {
+		input string
+		err   string
+	}{
+		{"1 + 2 abc", "Expected operator, got a"},
+		{"3 * 7 ,", "Expected operator, got ,"},
+		{"((27 - 11) + 3", "Expected right paren, got EOF"},
+		{"2 + x", "Expected number, got x"},
+	}
+
+	p := NewParser()
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.input, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := p.Parse(test.input)
+
+			if err == nil {
+				t.Fatal("Expected error")
+			}
+
+			expected := test.err
+			actual := err.Error()
+
+			if expected != actual {
+				t.Errorf("Expected %s, got %s", expected, actual)
+			}
+		})
+	}
+}

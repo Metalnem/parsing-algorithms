@@ -132,7 +132,7 @@ func (s *state) parsePrimary() (ast.Expr, error) {
 	val, err := strconv.ParseFloat(s.t.Value, 64)
 
 	if err != nil {
-		return nil, errors.Wrapf(err, "Expected number, got %s", s.t.Value)
+		return nil, errors.Errorf("Expected number, got %s", s.t.Value)
 	}
 
 	s.t = s.s.Next()

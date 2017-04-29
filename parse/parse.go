@@ -4,8 +4,8 @@ package parse
 import (
 	"strconv"
 
-	"github.com/metalnem/parsing-techniques/ast"
-	"github.com/metalnem/parsing-techniques/scan"
+	"github.com/metalnem/parsing-algorithms/ast"
+	"github.com/metalnem/parsing-algorithms/scan"
 	"github.com/pkg/errors"
 )
 

@@ -1,4 +1,4 @@
-// Package parse implements various algorithms for parsing expressions.
+// Package parse implements various algorithms for parsing mathematical expressions in infix notation.
 package parse
 
 import (

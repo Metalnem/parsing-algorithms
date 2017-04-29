@@ -1,4 +1,4 @@
-// Package ast declares the types used to represent syntax trees for simple expressions.
+// Package ast declares the types used to represent syntax trees for mathematical expressions.
 package ast
 
 import "math"

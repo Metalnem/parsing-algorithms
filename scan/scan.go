@@ -1,4 +1,4 @@
-// Package scan implements lexical scanning for simple expressions.
+// Package scan implements lexical scanning for mathematical expressions.
 package scan
 
 import (

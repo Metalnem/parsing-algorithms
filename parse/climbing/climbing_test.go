@@ -1,4 +1,4 @@
-package parse
+package climbing
 
 import (
 	"math"
@@ -29,7 +29,7 @@ func TestParse(t *testing.T) {
 		{"50 - -100 - -10", 160},
 	}
 
-	p := NewParser()
+	p := New()
 	tolerance := 0.00000000001
 
 	for _, test := range tests {
@@ -67,7 +67,7 @@ func TestParseFail(t *testing.T) {
 		{"1+2(3*4)", "Expected operator, got ("},
 	}
 
-	p := NewParser()
+	p := New()
 
 	for _, test := range tests {
 		test := test

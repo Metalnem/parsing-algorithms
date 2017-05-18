@@ -8,12 +8,44 @@ import (
 	"github.com/pkg/errors"
 )
 
+type assoc int
+
+const (
+	left assoc = iota
+	right
+)
+
+type kind int
+
+const (
+	unary kind = iota
+	binary
+)
+
+type op struct {
+	value string
+	prec  int
+	assoc assoc
+	kind  kind
+}
+
+var ops = []op{
+	{"+", 1, left, binary},
+	{"-", 1, left, binary},
+	{"*", 2, left, binary},
+	{"/", 2, left, binary},
+	{"+", 3, right, unary},
+	{"-", 3, right, unary},
+	{"^", 4, right, binary},
+}
+
 type parser struct {
 }
 
 type state struct {
-	s *scan.Scanner
-	t scan.Token
+	s     *scan.Scanner
+	ops   []op
+	exprs []ast.Expr
 }
 
 // New creates a new Shunting Yard parser.
@@ -23,17 +55,16 @@ func New() parse.Parser {
 
 func (parser) Parse(input string) (ast.Expr, error) {
 	s := scan.NewScanner(input)
-	t := s.Next()
 
-	state := &state{s: s, t: t}
+	state := &state{s: s}
 	expr, err := state.parseExpr()
 
 	if err != nil {
 		return nil, err
 	}
 
-	if state.t.Type != scan.EOF {
-		return nil, errors.Errorf("Expected EOF, got %s", state.t.Value)
+	if next := state.s.Next(); next.Type != scan.EOF {
+		return nil, errors.Errorf("Expected EOF, got %s", next.Value)
 	}
 
 	return expr, nil

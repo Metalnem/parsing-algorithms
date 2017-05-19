@@ -46,6 +46,7 @@ type parser struct {
 
 type state struct {
 	s     *scan.Scanner
+	t     scan.Token
 	ops   []op
 	exprs []ast.Expr
 }
@@ -56,17 +57,18 @@ func New() parse.Parser {
 }
 
 func (parser) Parse(input string) (ast.Expr, error) {
-	state := &state{
-		s:   scan.NewScanner(input),
-		ops: []op{op{}},
-	}
+	s := scan.NewScanner(input)
+	t := s.Next()
+
+	ops := []op{op{}}
+	state := &state{s: s, t: t, ops: ops}
 
 	if err := state.parseExpr(); err != nil {
 		return nil, err
 	}
 
-	if next := state.s.Next(); next.Type != scan.EOF {
-		return nil, errors.Errorf("Expected EOF, got %s", next.Value)
+	if state.t.Type != scan.EOF {
+		return nil, errors.Errorf("Expected EOF, got %s", state.t.Value)
 	}
 
 	return state.exprs[0], nil
@@ -78,13 +80,14 @@ func (s *state) parseExpr() error {
 	}
 
 	for {
-		op, ok := makeBinary(s.s.Next().Value)
+		op, ok := makeBinary(s.t.Value)
 
 		if !ok {
 			break
 		}
 
 		s.push(op)
+		s.t = s.s.Next()
 
 		if err := s.parsePrimary(); err != nil {
 			return err
@@ -99,38 +102,40 @@ func (s *state) parseExpr() error {
 }
 
 func (s *state) parsePrimary() error {
-	t := s.s.Next()
-
-	if t.Type == scan.Number {
-		val, err := strconv.ParseFloat(t.Value, 64)
+	if s.t.Type == scan.Number {
+		val, err := strconv.ParseFloat(s.t.Value, 64)
 
 		if err != nil {
-			return errors.Errorf("Expected number, got %s", t.Value)
+			return errors.Errorf("Expected number, got %s", s.t.Value)
 		}
 
 		s.exprs = append(s.exprs, &ast.Number{Value: val})
+		s.t = s.s.Next()
+
 		return nil
 	}
 
-	if t.Type == scan.LeftParen {
+	if s.t.Type == scan.LeftParen {
 		s.ops = append(s.ops, op{})
+		s.t = s.s.Next()
 
 		if err := s.parseExpr(); err != nil {
 			return err
 		}
 
-		s.ops = s.ops[:len(s.ops)-1]
-		t := s.s.Next()
-
-		if t.Type != scan.RightParen {
-			return errors.Errorf("Expected right paren, got %s", t.Value)
+		if s.t.Type != scan.RightParen {
+			return errors.Errorf("Expected right paren, got %s", s.t.Value)
 		}
+
+		s.ops = s.ops[:len(s.ops)-1]
+		s.t = s.s.Next()
 
 		return nil
 	}
 
-	if op, ok := makeUnary(t.Value); ok {
+	if op, ok := makeUnary(s.t.Value); ok {
 		s.push(op)
+		s.t = s.s.Next()
 
 		if err := s.parsePrimary(); err != nil {
 			return err
@@ -139,7 +144,7 @@ func (s *state) parsePrimary() error {
 		return nil
 	}
 
-	return errors.Errorf("Expected expression, got %s", t.Value)
+	return errors.Errorf("Expected expression, got %s", s.t.Value)
 }
 
 func (s *state) push(op op) {

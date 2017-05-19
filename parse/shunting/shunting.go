@@ -2,6 +2,8 @@
 package shunting
 
 import (
+	"strconv"
+
 	"github.com/metalnem/parsing-algorithms/ast"
 	"github.com/metalnem/parsing-algorithms/parse"
 	"github.com/metalnem/parsing-algorithms/scan"
@@ -71,11 +73,70 @@ func (parser) Parse(input string) (ast.Expr, error) {
 }
 
 func (s *state) parseExpr() error {
+	if err := s.parsePrimary(); err != nil {
+		return err
+	}
+
+	for {
+		op, ok := makeBinary(s.s.Next().Value)
+
+		if !ok {
+			break
+		}
+
+		s.push(op)
+
+		if err := s.parsePrimary(); err != nil {
+			return err
+		}
+	}
+
+	for s.ops[len(s.ops)-1].prec > 0 {
+		s.pop()
+	}
+
 	return nil
 }
 
 func (s *state) parsePrimary() error {
-	return nil
+	t := s.s.Next()
+
+	if t.Type == scan.Number {
+		val, err := strconv.ParseFloat(t.Value, 64)
+
+		if err != nil {
+			return errors.Errorf("Expected number, got %s", t.Value)
+		}
+
+		s.exprs = append(s.exprs, &ast.Number{Value: val})
+		return nil
+	}
+
+	if t.Type == scan.LeftParen {
+		if err := s.parseExpr(); err != nil {
+			return err
+		}
+
+		t := s.s.Next()
+
+		if t.Type != scan.RightParen {
+			return errors.Errorf("Expected right paren, got %s", t.Value)
+		}
+
+		return nil
+	}
+
+	if op, ok := makeUnary(t.Value); ok {
+		s.push(op)
+
+		if err := s.parsePrimary(); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return errors.Errorf("Expected expression, got %s", t.Value)
 }
 
 func (s *state) push(op op) {

@@ -113,10 +113,13 @@ func (s *state) parsePrimary() error {
 	}
 
 	if t.Type == scan.LeftParen {
+		s.ops = append(s.ops, op{})
+
 		if err := s.parseExpr(); err != nil {
 			return err
 		}
 
+		s.ops = s.ops[:len(s.ops)-1]
 		t := s.s.Next()
 
 		if t.Type != scan.RightParen {

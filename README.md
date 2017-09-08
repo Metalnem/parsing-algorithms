@@ -4,3 +4,4 @@ Various algorithms for parsing mathematical expressions in infix notation.
 
 [Shunting Yard](http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm)  
 [Precedence climbing](http://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing)  
+[Top Down Operator Precedence](http://eli.thegreenplace.net/2010/01/02/top-down-operator-precedence-parsing)  

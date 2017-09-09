@@ -7,6 +7,7 @@ import (
 
 	"github.com/metalnem/parsing-algorithms/parse"
 	"github.com/metalnem/parsing-algorithms/parse/climbing"
+	"github.com/metalnem/parsing-algorithms/parse/precedence"
 	"github.com/metalnem/parsing-algorithms/parse/shunting"
 )
 
@@ -40,6 +41,7 @@ func TestParse(t *testing.T) {
 	}{
 		{"Precedence climbing", climbing.New()},
 		{"Shunting Yard", shunting.New()},
+		{"Top Down Operator Precedence", precedence.New()},
 	}
 
 	tolerance := 0.00000000001
@@ -85,6 +87,7 @@ func TestParseFail(t *testing.T) {
 	}{
 		{"Precedence climbing", climbing.New()},
 		{"Shunting Yard", shunting.New()},
+		{"Top Down Operator Precedence", precedence.New()},
 	}
 
 	for _, parser := range parsers {
@@ -95,9 +98,7 @@ func TestParseFail(t *testing.T) {
 			t.Run(fmt.Sprintf("%s - %s", parser.name, test), func(t *testing.T) {
 				t.Parallel()
 
-				_, err := p.Parse(test)
-
-				if err == nil {
+				if _, err := p.Parse(test); err == nil {
 					t.Fatal("Expected error")
 				}
 			})

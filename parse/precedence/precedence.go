@@ -20,12 +20,16 @@ const (
 type symbol struct {
 	value string
 	lbp   int
-	nud   func(*scan.Scanner) (ast.Expr, error)
-	led   func(*scan.Scanner, ast.Expr) (ast.Expr, error)
+	nud   func(*state) (ast.Expr, error)
+	led   func(*state, ast.Expr) (ast.Expr, error)
 }
 
 type parser struct {
+}
+
+type state struct {
 	s *scan.Scanner
+	t scan.Token
 }
 
 var symbols map[string]symbol
@@ -47,24 +51,23 @@ func New() parse.Parser {
 
 func (parser) Parse(input string) (ast.Expr, error) {
 	s := scan.NewScanner(input)
-	expr, err := expression(s, 0)
+	t := s.Next()
+
+	state := &state{s: s, t: t}
+	expr, err := state.expression(0)
 
 	if err != nil {
 		return nil, err
 	}
 
-	t := s.Next()
-
-	if t.Type != scan.EOF {
+	if state.t.Type != scan.EOF {
 		return nil, errors.Errorf("Expected EOF, got %s", t.Value)
 	}
 
 	return expr, nil
 }
 
-func next(s *scan.Scanner) symbol {
-	t := s.Next()
-
+func toSymbol(t scan.Token) symbol {
 	if t.Type == scan.LeftParen {
 		return paren()
 	}
@@ -80,18 +83,27 @@ func next(s *scan.Scanner) symbol {
 	return symbol{}
 }
 
-func expression(s *scan.Scanner, bp int) (ast.Expr, error) {
-	t := next(s)
-	token := next(s)
+func (s *state) expression(bp int) (ast.Expr, error) {
+	t := toSymbol(s.t)
+	s.t = s.s.Next()
+
+	if t.nud == nil {
+		return nil, errors.Errorf("Expected expression, got %s", t.value)
+	}
+
 	left, err := t.nud(s)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for bp < token.lbp {
+	for token := toSymbol(s.t); bp < token.lbp; token = toSymbol(s.t) {
 		t = token
-		token = next(s)
+		s.t = s.s.Next()
+
+		if t.led == nil {
+			return nil, errors.Errorf("Expected expression, got %s", t.value)
+		}
 
 		if left, err = t.led(s, left); err != nil {
 			return nil, err
@@ -108,19 +120,18 @@ func op(value string) symbol {
 func paren() symbol {
 	var sym symbol
 
-	sym.nud = func(s *scan.Scanner) (ast.Expr, error) {
-		expr, err := expression(s, 0)
+	sym.nud = func(s *state) (ast.Expr, error) {
+		expr, err := s.expression(0)
 
 		if err != nil {
 			return nil, err
 		}
 
-		t := s.Next()
-
-		if t.Type != scan.RightParen {
-			return nil, errors.Errorf("Expected right paren, got %s", t.Value)
+		if s.t.Type != scan.RightParen {
+			return nil, errors.Errorf("Expected right paren, got %s", s.t.Value)
 		}
 
+		s.t = s.s.Next()
 		return expr, nil
 	}
 
@@ -130,7 +141,7 @@ func paren() symbol {
 func literal(value string) symbol {
 	sym := symbol{value: value}
 
-	sym.nud = func(s *scan.Scanner) (ast.Expr, error) {
+	sym.nud = func(s *state) (ast.Expr, error) {
 		val, err := strconv.ParseFloat(value, 64)
 
 		if err != nil {
@@ -150,8 +161,8 @@ func (sym symbol) infix(bp int, assoc assoc) symbol {
 		bp = bp - 1
 	}
 
-	sym.led = func(s *scan.Scanner, left ast.Expr) (ast.Expr, error) {
-		expr, err := expression(s, bp)
+	sym.led = func(s *state, left ast.Expr) (ast.Expr, error) {
+		expr, err := s.expression(bp)
 
 		if err != nil {
 			return nil, err
@@ -164,8 +175,8 @@ func (sym symbol) infix(bp int, assoc assoc) symbol {
 }
 
 func (sym symbol) prefix(bp int) symbol {
-	sym.nud = func(s *scan.Scanner) (ast.Expr, error) {
-		expr, err := expression(s, bp)
+	sym.nud = func(s *state) (ast.Expr, error) {
+		expr, err := s.expression(bp)
 
 		if err != nil {
 			return nil, err
